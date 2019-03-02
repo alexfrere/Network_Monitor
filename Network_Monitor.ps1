@@ -28,13 +28,11 @@ $networkFailDateTime = $null
 while($true)
 {
     try {
-        Write-Host $PSScriptRoot
-
         Invoke-WebRequest -Uri "https://www.google.com" -TimeoutSec 5 -ErrorAction Stop | Out-Null
 
         if ($isNetworkDown) {
             $now = Get-Date
-            Write-LogLine "Network went back UP at: $($now)"
+            Write-LogLine "Network came back UP at: $($now)"
 
             $diff = ($now - $networkFailDateTime)
             Write-LogLine "Network was DOWN for: $($diff.Minutes) minutes, $($diff.Seconds) seconds"
@@ -53,5 +51,3 @@ while($true)
 
     Start-Sleep -Seconds 10
 }
-
-

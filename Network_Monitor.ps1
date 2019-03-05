@@ -21,6 +21,7 @@ function Write-LogLine {
 }
 
 # Variables
+$failCount = 0
 $isNetworkDown = $false
 $networkFailDateTime = $null
 
@@ -28,26 +29,32 @@ $networkFailDateTime = $null
 while($true)
 {
     try {
-        Invoke-WebRequest -Uri "https://www.google.com" -TimeoutSec 5 -ErrorAction Stop | Out-Null
+        Invoke-WebRequest -Uri "https://www.google.com" -TimeoutSec 3 -ErrorAction Stop | Out-Null
 
         if ($isNetworkDown) {
             $now = Get-Date
-            Write-LogLine "Network came back UP at: $($now)"
+            Write-LogLine "$($now) - network came back UP"
 
             $diff = ($now - $networkFailDateTime)
-            Write-LogLine "Network was DOWN for: $($diff.Minutes) minutes, $($diff.Seconds) seconds"
+            Write-LogLine "DOWNTIME: $($diff.Hours)h - $($diff.Minutes)m - $($diff.Seconds)s"
             Write-LogLine "--------------------------------------------------"
-
-            $isNetworkDown = $false
-            $networkFailDateTime = $null
         }
+
+        $failCount = 0
+        $isNetworkDown = $false
+        $networkFailDateTime = $null
     } catch {
-        $isNetworkDown = $true
+        $failCount++
+        
         if ($networkFailDateTime -eq $null) {
             $networkFailDateTime = Get-Date
-            Write-LogLine "Network went DOWN at: $($networkFailDateTime)"
+        }
+
+        if (($failCount -ge 3) -and (-not $isNetworkDown)) {
+            $isNetworkDown = $true
+            Write-LogLine "$($networkFailDateTime) - network went DOWN"
         }
     }
 
-    Start-Sleep -Seconds 10
+    Start-Sleep -Seconds 5
 }
